@@ -1,7 +1,13 @@
+using Template.Application.ApplicationModule;
+using Template.Infrastructure.InfrastructureModule;
+
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplicationServices(builder.Configuration); // обов'язково
 
+
+builder.Services.AddControllers();
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
