@@ -8,10 +8,10 @@ namespace Template.API.APIModules;
 public static class APIDependencies
 {
    
-    public static IServiceCollection AddConfigurationOptionsBindings(this IServiceCollection services,
-        IConfiguration configuration)
-    {
-        services.Configure<PostgresOptions>(configuration.GetSection("ConnectionStrings"));
-        return services;
+        public static IServiceCollection AddConfigurationOptionsBindings(this IServiceCollection services,
+            IConfiguration configuration)
+        {
+            services.Configure<PostgresOptions>(configuration.GetSection("ConnectionStrings"));
+            return services;
+        }
     }
-}

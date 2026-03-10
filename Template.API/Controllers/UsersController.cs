@@ -33,8 +33,9 @@ public class UsersController : ControllerBase
 
         return Ok(result);
     }
+
     [HttpGet("by-email")]
-    public async Task<IActionResult> GetByEmail(string email)
+    public async Task<IActionResult> GetByEmail([FromQuery] string email)
     {
         var result = await _mediator.Send(new GetUserByEmailQuery(email));
         if (result is null)
@@ -44,16 +45,16 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] UserDTO dto)
+    public async Task<IActionResult> Create([FromBody] CreateUserRequest request)
     {
-        var id = await _mediator.Send(new CreateUserCommand(dto));
+        var id = await _mediator.Send(new CreateUserCommand(request));
         return CreatedAtAction(nameof(GetById), new { id }, null);
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UserDTO dto)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserRequest request)
     {
-        await _mediator.Send(new UpdateUserCommand(id, dto));
+        await _mediator.Send(new UpdateUserCommand(id, request));
         return NoContent();
     }
 
