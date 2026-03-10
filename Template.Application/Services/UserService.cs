@@ -14,29 +14,38 @@ public class UserService : IUserService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<IEnumerable<UserDTO>> GetAllAsync()
+    public async Task<IEnumerable<UserResponse>> GetAllAsync()
     {
         var users = await _unitOfWork.Users.GetAllAsync();
-        return users.Select(MapToDto);
+        return users.Select(MapToResponse);
     }
 
-    public async Task<UserDTO?> GetByIdAsync(Guid id)
+    public async Task<UserResponse?> GetByIdAsync(Guid id)
     {
         var user = await _unitOfWork.Users.GetByIdAsync(id);
-        return user is null ? null : MapToDto(user);
+        return user is null ? null : MapToResponse(user);
     }
 
-     public async Task<UserDTO?> GetByEmailAsync(string email)
+    public async Task<UserResponse?> GetByEmailAsync(string email)
     {
-        var user = await _unitOfWork.Users.GetByEmailAsync(email);
-        return user is null ? null : MapToDto(user);
+        var normalizedEmail = NormalizeEmail(email);
+        var user = await _unitOfWork.Users.GetByEmailAsync(normalizedEmail);
+        return user is null ? null : MapToResponse(user);
     }
 
-    public async Task<Guid> CreateAsync(UserDTO dto)
+    public async Task<Guid> CreateAsync(CreateUserRequest request)
     {
+        var normalizedEmail = NormalizeEmail(request.Email);
+
+        var existing = await _unitOfWork.Users.GetByEmailAsync(normalizedEmail);
+        if (existing is not null)
+        {
+            throw new InvalidOperationException($"User with email '{normalizedEmail}' already exists.");
+        }
+
         var user = new User
         {
-            Email = dto.Email
+            Email = normalizedEmail
         };
 
         var id = await _unitOfWork.Users.AddAsync(user);
@@ -44,7 +53,7 @@ public class UserService : IUserService
         return id;
     }
 
-    public async Task UpdateAsync(Guid id, UserDTO dto)
+    public async Task UpdateAsync(Guid id, UpdateUserRequest request)
     {
         var user = await _unitOfWork.Users.GetByIdAsync(id);
         if (user is null)
@@ -52,7 +61,15 @@ public class UserService : IUserService
             throw new KeyNotFoundException($"User {id} not found");
         }
 
-        user.Email = dto.Email;
+        var normalizedEmail = NormalizeEmail(request.Email);
+
+        var existing = await _unitOfWork.Users.GetByEmailAsync(normalizedEmail);
+        if (existing is not null && existing.Id != id)
+        {
+            throw new InvalidOperationException($"User with email '{normalizedEmail}' already exists.");
+        }
+
+        user.Email = normalizedEmail;
 
         await _unitOfWork.Users.UpdateAsync(user);
         await _unitOfWork.SaveChangesAsync();
@@ -70,7 +87,10 @@ public class UserService : IUserService
         await _unitOfWork.SaveChangesAsync();
     }
 
-    private static UserDTO MapToDto(User user) =>
+    private static string NormalizeEmail(string email) =>
+        email.Trim().ToLowerInvariant();
+
+    private static UserResponse MapToResponse(User user) =>
         new()
         {
             Id = user.Id,
