@@ -44,6 +44,7 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateUserRequest request)
     {

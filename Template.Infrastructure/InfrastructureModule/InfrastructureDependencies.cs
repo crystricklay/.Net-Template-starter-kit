@@ -25,9 +25,10 @@ public static class InfrastructureDependencies
             opt.UseNpgsql(connectionString);
         });
         
+
         services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();
         services.AddScoped<IUserRepository, UserRepository>();
-        
+
         return services;
     }
 }
